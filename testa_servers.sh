@@ -28,6 +28,40 @@
 # parametro para definição do timeout da conexão. 10 segundos é um bom valor para testes em VPN.
 CONNTIMEOUT="10";
 
+check_update(){
+	if [ "${SO}" = "Linux" -o "${SO}" = "CYGWIN" ]; then
+		LASTVERSION=`curl -scL https://raw.githubusercontent.com/eloparedes/test-servers/master/testa_servers.sh |md5sum |awk '{ print $1 }'`;
+		THISVERSION=`cat $0 |md5sum |awk '{ print $1 }'`;
+	elif [ "${SO}" = "Darwin" ]; then
+		LASTVERSION=`curl -scL https://raw.githubusercontent.com/eloparedes/test-servers/master/testa_servers.sh |md5`;
+		THISVERSION=`cat $0 |md5`
+	fi
+
+
+	if [[ ${LASTVERSION} != ${THISVERSION} ]]; then
+		echo "Seu script está desatualizado, deseja atualizar? S/N";
+		read RESPOSTA;
+
+		case ${RESPOSTA} in
+			s|S)
+				echo "resposta positiva"
+				curl -scL https://raw.githubusercontent.com/eloparedes/test-servers/master/testa_servers.sh > update.txt
+			;;
+			n|N)
+				echo "ok, sem atualizar entao";
+			;;
+			*)
+				echo "não encontrei a resposta";
+				exit 1;
+			;;
+		esac
+
+	fi
+
+	#exit 0;
+	
+}
+
 escreve_update(){
 	if [[ ${4} = "UPDATE" ]]; then
 		tput cup $((LINES-2)) 0
@@ -215,6 +249,7 @@ animacao(){
 	done
 }
 
+
 ####### Inicio do script
 ## 
 echo 
@@ -282,6 +317,7 @@ COLSIZE=$((ICON+DESCSIZE+IPSIZE+RESULTSIZE+PORTSIZE+RAIZSIZE+21))
 # verifica quantas linhas possui o inventario para repeticao
 FSIZE=`awk 'END{print NR}' ${DADOS}`
 
+check_update
 # escreve cabeçalho da execução dentro do arquivo temporario
 cria_cabecalho
 
@@ -303,3 +339,4 @@ rm -f ${TESTE} ${DADOS} ${TESTRESULTS} ${TESTRESULTSBODY}
 
 #imprime uma linha final e sai do script
 printf "%s\n"                                   "$LINE"
+
