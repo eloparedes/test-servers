@@ -28,10 +28,10 @@
 # parametro para definição do timeout da conexão. 10 segundos é um bom valor para testes em VPN.
 CONNTIMEOUT="10";
 
-BUILDVER=1;
+BUILDVER=1
 check_update(){
                          
-	LASTVERSION=`curl -scL https://raw.githubusercontent.com/eloparedes/test-servers/master/testa_servers.sh |grep "BUILDVER" |awk -F"=" '{ print $2 }'`;
+	LASTVERSION=`curl -scL https://raw.githubusercontent.com/eloparedes/test-servers/master/testa_servers.sh |grep "^BUILDVER=" |awk -F"=" '{ print $2 }'`;
 	THISVERSION=${BUILDVER};
 
 	if [[ ${LASTVERSION} != ${THISVERSION} ]]; then
