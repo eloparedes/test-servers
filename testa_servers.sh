@@ -41,6 +41,8 @@ check_update(){
 		case ${RESPOSTA} in
 			s|S)
 				curl -scL https://raw.githubusercontent.com/eloparedes/test-servers/master/testa_servers.sh > $0
+				echo "✅ - Script atualizado, por favor, execute novamente.";
+				exit 0;
 			;;
 			n|N)
 				echo "";
@@ -334,6 +336,7 @@ rm -f ${TESTE} ${DADOS} ${TESTRESULTS} ${TESTRESULTSBODY}
 
 #imprime uma linha final e sai do script
 printf "%s\n"                                   "$LINE"
+
 
 
 
