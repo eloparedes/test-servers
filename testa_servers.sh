@@ -40,7 +40,7 @@ check_update(){
 		case ${RESPOSTA} in
 			s|S)
 				echo "resposta positiva"
-				curl -scL https://raw.githubusercontent.com/eloparedes/test-servers/master/testa_servers.sh > update.txt
+				curl -scL https://raw.githubusercontent.com/eloparedes/test-servers/master/testa_servers.sh > $0
 			;;
 			n|N)
 				echo "ok, sem atualizar entao";
