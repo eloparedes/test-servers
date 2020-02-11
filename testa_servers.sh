@@ -28,7 +28,7 @@
 # parametro para definição do timeout da conexão. 10 segundos é um bom valor para testes em VPN.
 CONNTIMEOUT="10";
 
-BUILDVER=0
+BUILDVER=1
 check_update(){
 
 	LASTVERSION=`curl -H 'Cache-Control: no-cache' -scL "https://raw.githubusercontent.com/eloparedes/test-servers/master/testa_servers.sh" |grep "^BUILDVER=" |awk -F"=" '{ print $2 }'`;
@@ -41,7 +41,7 @@ check_update(){
 		case ${RESPOSTA} in
 			s|S)
 				curl -scL https://raw.githubusercontent.com/eloparedes/test-servers/master/testa_servers.sh > $0
-				echo "✅ - Script atualizado, por favor, execute novamente.";
+				echo "✅ - Script atualizado. Por favor, execute novamente.";
 				exit 0;
 			;;
 			n|N)
@@ -336,7 +336,4 @@ rm -f ${TESTE} ${DADOS} ${TESTRESULTS} ${TESTRESULTSBODY}
 
 #imprime uma linha final e sai do script
 printf "%s\n"                                   "$LINE"
-
-
-
 
