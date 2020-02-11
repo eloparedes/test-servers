@@ -1,6 +1,5 @@
 #/bin/bash
 ##################################################################################################
-##                                     Teste de conectividade                                   ##
 ##                                                                                              ##
 ##  Verifica se existe conectividade entre a maquina local e os IPs e portas                    ##
 ##  Configuradas                                                                                ##
