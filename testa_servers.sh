@@ -29,14 +29,9 @@
 CONNTIMEOUT="10";
 
 check_update(){
-	if [ "${SO}" = "Linux" -o "${SO}" = "CYGWIN" ]; then
-		LASTVERSION=`curl -scL https://raw.githubusercontent.com/eloparedes/test-servers/master/testa_servers.sh |md5sum |awk '{ print $1 }'`;
-		THISVERSION=`cat $0 |md5sum |awk '{ print $1 }'`;
-	elif [ "${SO}" = "Darwin" ]; then
-		LASTVERSION=`curl -scL https://raw.githubusercontent.com/eloparedes/test-servers/master/testa_servers.sh |md5`;
-		THISVERSION=`cat $0 |md5`
-	fi
 
+	LASTVERSION=`curl -scL https://raw.githubusercontent.com/eloparedes/test-servers/master/testa_servers.sh |wc -c`;
+	THISVERSION=`wc -c $0 |awk '{ print $1 }'`;
 
 	if [[ ${LASTVERSION} != ${THISVERSION} ]]; then
 		echo "Seu script está desatualizado, deseja atualizar? S/N";
