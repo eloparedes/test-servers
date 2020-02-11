@@ -30,8 +30,8 @@ CONNTIMEOUT="10";
 
 BUILDVER=1
 check_update(){
-                         
-	LASTVERSION=`curl -scL https://raw.githubusercontent.com/eloparedes/test-servers/master/testa_servers.sh |grep "^BUILDVER=" |awk -F"=" '{ print $2 }'`;
+
+	LASTVERSION=`curl -H 'Cache-Control: no-cache' -scL "https://raw.githubusercontent.com/eloparedes/test-servers/master/testa_servers.sh" |grep "^BUILDVER=" |awk -F"=" '{ print $2 }'`;
 	THISVERSION=${BUILDVER};
 
 	if [[ ${LASTVERSION} != ${THISVERSION} ]]; then
