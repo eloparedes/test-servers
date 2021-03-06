@@ -21,75 +21,34 @@
 ##  04/02/2020 - V 1.4 - Alteração pra que o inventario seja tratado antes de processado, desta ##
 ##               forma, um inventario com formatacao de windows não mais irá quebrar a exibição ##
 ##               dos resultados dos testes.                                                     ##
-##  25/02/2020 - V 1.5 - atualização para o script poder se auto atualizar pelo git, tratamento ##
-##               para que os icones sejam suprimidos no linux, tratamento para que quando o     ##
-##               script não consiga verificar a versão disponível no GIT, ignore e siga a       ##
-##               execução. Adição de rotina para verificar se os comandos necessários para a    ##
-##               perfeita execução estão instalados e disponíveis.                              ##
-##  21/04/2020 - V 1.6 - atualização para mudar a animação, avisar que está checando updates e  ##
-##               melhorar a performance de testes em background para o MobaXterm e validar      ##
-##               se possui todos os comandos necessários para execução correta do scritp (fix)  ##
 ##                                                                                              ##
 ##  Eduardo Paredes                                                                             ##
 ##################################################################################################
 
 # parametro para definição do timeout da conexão. 10 segundos é um bom valor para testes em VPN.
 CONNTIMEOUT="10";
-BUILDVER=8
-BUILDDATE="28/10/2020"
 
-check_commands(){
-
-	exists(){
-		if [ "${SO}" = "CYGWIN" ]; then
-			COMANDOOK=`/bin/busybox.exe --list |grep "$1" -c`
-			if [[ ${COMANDOOK} -eq 0 ]]; then
-				COMANDOOK=`ls /bin |grep -c "$1"`
-			fi
-		elif [ "${SO}" = "Linux" -o "${SO}" = "Darwin" ]; then
-			COMANDOOK=`whereis $1 |grep -c "$1"`
-			COMANDOOK+=`ls /System/Volumes/Data/usr/local/bin |grep -c "$1"`
-			IPVPN=`ifconfig |grep ppp0 -A 1 |grep inet |awk '{ print $2 }'`
-		fi
-	}
-
-	CMDLIST="nc tput curl printf uname cat awk egrep sed seq ps sleep dos2unix iconv mktemp rm";
-	for I in ${CMDLIST}; do
-		exists ${I};
-		if [[ ${COMANDOOK} -eq 0 ]]; then
-			INSTALL+="${I} "
-		fi
-	done
-
-	if [[ ${#INSTALL} -gt 0 ]]; then
-		echo -e "Seu computador precisa de alguns comandos que não estão disponvíveis.";
-		echo -e "Por favor, instale os seguintes comandos: "
-		echo -e "${INSTALL}";
-		exit 0;
-	fi
-
-}
-
+BUILDVER=1
 check_update(){
 
-	(LASTVERSION=`curl --max-time 5 -H 'Cache-Control: no-cache' -s "https://raw.githubusercontent.com/eloparedes/test-servers/master/testa_servers.sh" |grep "^BUILDVER=" |awk -F"=" '{ print $2 }'`) & 
+	LASTVERSION=`curl -H 'Cache-Control: no-cache' -scL "https://raw.githubusercontent.com/eloparedes/test-servers/master/testa_servers.sh" |grep "^BUILDVER=" |awk -F"=" '{ print $2 }'`;
 	THISVERSION=${BUILDVER};
-	animacao "curl" "Verificando update"
-	if [[ ${LASTVERSION} -gt ${THISVERSION} && ${LASTVERSION} != "" ]]; then
-		echo -ne "${NOKICON} - Seu script está desatualizado, deseja atualizar? (S/N): ";
+
+	if [[ ${LASTVERSION} != ${THISVERSION} ]]; then
+		echo -ne "🚫 - Seu script está desatualizado, deseja atualizar? (S/N): ";
 		read RESPOSTA;
 
 		case ${RESPOSTA} in
 			s|S)
-				curl -s https://raw.githubusercontent.com/eloparedes/test-servers/master/testa_servers.sh > $0
-				echo -e "${OKICON} - Script atualizado. Por favor, execute novamente.";
+				curl -scL https://raw.githubusercontent.com/eloparedes/test-servers/master/testa_servers.sh > $0
+				echo "✅ - Script atualizado. Por favor, execute novamente.";
 				exit 0;
 			;;
 			n|N)
-				echo -e "";
+				echo "";
 			;;
 			*)
-				echo -e "não encontrei a resposta";
+				echo "não encontrei a resposta";
 				exit 1;
 			;;
 		esac
@@ -135,7 +94,7 @@ testa(){
 	RESP=''
 	
 	# atualiza a tela
-	escreve_update "${UPDATEICON}" "Testando inventario" "${LINHA}/${FSIZE}" "UPDATE"
+	escreve_update "🔁" "Testando inventario" "${LINHA}/${FSIZE}" "UPDATE"
 
 	if [ -n "${PORTATESTE}" ]; then
 		# nc é um comando nao nativo, pode ser necessário instalar
@@ -153,18 +112,18 @@ testa(){
 		if [ "$?" = "0" ]; then
 			TIPO="OK"
 			RESP="SUCESSO"
-			ICON=${OKICON}
+			ICON="✅"
 			RAIZ=" "
 		else
 			REASON=`cat ${TESTE} | awk -F"failed: " '{ print $2 }'`
-			REFUSED=`echo -e ${REASON} |egrep -c "rejected|refused"`
+			REFUSED=`echo ${REASON} |egrep -c "rejected|refused"`
 			if [ "${REFUSED}" -gt 0 ]; then
 				TIPO="ATENCAO"
-				ICON=${WARNICON}
+				ICON="🔶"
 				RAIZ="Aplicacao"
 			else
 				TIPO="FALHA"
-				ICON=${NOKICON}
+				ICON="🚫"
 				RAIZ="Firewall"
 			fi			
 			RESP+="${TIPO} - ${REASON}"
@@ -181,9 +140,9 @@ cria_cabecalho(){
 
 	# Imprime o cabecalho do script	
 	printf "%s\n"                                   "$LINE" > ${TESTRESULTS}
-	printf "%s %-$((COLSIZE-4))s %s\n"                  "|" "Script de teste para regras de Firewall - Build: ${BUILDVER} - Build Date: ${BUILDDATE}" "|" >> ${TESTRESULTS}
-	printf "%s %-$((COLSIZE-4))s %s\n"                  "|" "Criado por Eduardo Paredes - 24/09/2019" "|" >> ${TESTRESULTS}
-	printf "%s %-$((COLSIZE-4))s %s\n"                  "|" "Execucao em: $DATA - IP VPN: ${IPVPN}" "|" >> ${TESTRESULTS}
+	printf "%s %-$((COLSIZE-4))s %s\n"                  "|" "Script de teste para regras de Firewall" "|" >> ${TESTRESULTS}
+	printf "%s %-$((COLSIZE-4))s %s\n"                  "|" "Eduardo Paredes - 24/09/2019" "|" >> ${TESTRESULTS}
+	printf "%s %-$((COLSIZE-4))s %s\n"                  "|" "Execucao em: $DATA" "|" >> ${TESTRESULTS}
 	printf "%s\n"                                   "$LINE" >> ${TESTRESULTS}
 	escreve_acao "" "DESCRICAO" "IP" "PORTA" "RESULTADO" "CAUSA POSSIVEL" "" "" >> ${TESTRESULTS}
 	printf "%s\n"                                   "$LINE" >> ${TESTRESULTS}
@@ -200,13 +159,13 @@ ciclo_de_testes(){
 
 		# tratamento para caso o campo IP possua mais de um ip separado por virgula
 		# conta quantos sao os valores, pega somente o primeiro e remove da string original
-		COMPOSITEIP=`echo -e $IP |sed 's/[0-9]//g' |sed 's/\.//g' |sed 's/\ //g'`;
-		COMPOSITEIP=`echo -e ${#COMPOSITEIP}`;
+		COMPOSITEIP=`echo $IP |sed 's/[0-9]//g' |sed 's/\.//g' |sed 's/\ //g'`;
+		COMPOSITEIP=`echo ${#COMPOSITEIP}`;
 
 		# tratamento para caso o campo PORTA possua mais de uma PORTA separada por virgula
 		# conta quantos sao os valores, pega somente o primeiro e remove da string original
-		COMPOSITEPORT=`echo -e $PORTA |sed 's/[0-9]//g' |sed 's/\.//g' |sed 's/\ //g'`
-		COMPOSITEPORT=`echo -e ${#COMPOSITEPORT}`;
+		COMPOSITEPORT=`echo $PORTA |sed 's/[0-9]//g' |sed 's/\.//g' |sed 's/\ //g'`
+		COMPOSITEPORT=`echo ${#COMPOSITEPORT}`;
 
 		# caso o ip seja composto (mais de um valor)
 		if [[ $COMPOSITEIP -gt 0 ]]; then
@@ -221,7 +180,7 @@ ciclo_de_testes(){
 						PORTSEQ=$((COMPOSITEPORT+1));
 						
 						# busca somente o primeiro valor da string de IPs
-						IPATUAL=`echo -e $IP |awk -F"," '{ print $1 }'`
+						IPATUAL=`echo $IP |awk -F"," '{ print $1 }'`
 						
 						# remove o valor buscado da lista de IPS
 						IP=${IP#*,}
@@ -230,7 +189,7 @@ ciclo_de_testes(){
 						for J in $(seq $PORTSEQ);
 							do				
 								# busca a primeira porta da string de portas
-								PORTAATUAL=`echo -e ${PORTA} |awk -F"," '{ print $1 }'`
+								PORTAATUAL=`echo ${PORTA} |awk -F"," '{ print $1 }'`
 
 								# remove o valor buscado da lista de portas
 								PORTA=${PORTA#*,}
@@ -242,7 +201,7 @@ ciclo_de_testes(){
 							PORTA=`cat ${DADOS} |awk "NR==${LINHA}" |awk -F'\t' '{ print $3 }'`
 					else
 						# caso a porta nao seja composta porem o IP sim, pega o primeiro da lista
-						IPATUAL=`echo -e $IP |awk -F"," '{ print $1 }'`
+						IPATUAL=`echo $IP |awk -F"," '{ print $1 }'`
 
 						# remove o valor buscado da lista
 						IP=${IP#*,}
@@ -260,7 +219,7 @@ ciclo_de_testes(){
 			for J in $(seq $PORTSEQ);
 				do				
 					# busca a primeira porta da string de portas
-					PORTAATUAL=`echo -e ${PORTA} |awk -F"," '{ print $1 }'`
+					PORTAATUAL=`echo ${PORTA} |awk -F"," '{ print $1 }'`
 
 					# remove o valor buscado da lista de portas
 					PORTA=${PORTA#*,}
@@ -276,34 +235,33 @@ ciclo_de_testes(){
 }
 
 animacao(){
-	processo="$1"
-	mensagem="$2"
 	# salva o pid desta execução
 	local pid=$!
 	# verifica se o pid desta execução e os pids todos dos testes terminaram de executar enquanto exibe uma animação
-	while [ "$(ps a | awk '{print $1}' | grep $pid)" -o "$(ps -ef |grep "${processo} -v" |grep -v grep)" -o "$(ps -ef |grep /usr/bin/${processo} |grep -v grep)" ]; do
-		for N in ⣀ ⣠ ⣴ ⣿ ⠿ ⠋ ⠉ ⠙ ⠿ ⣿ ⣦ ⣄ ; do 
-			printf "\r${mensagem}: $N "; 
-			sleep .1;
+	while [ "$(ps a | awk '{print $1}' | grep $pid)" -o "$(ps -ef |grep "nc -v" |grep -v grep)" -o "$(ps -ef |grep /usr/bin/nc |grep -v grep)" ]; do
+		for N in ⠛ ⠙ ⠹ ⠽ ⠧ ⠟ ; do 
+			printf "\rExecutando: $N"; 
+			sleep .2;
 		done
 	done
 }
 
+
 ####### Inicio do script
 ## 
-echo -e 
+echo 
 # garantir que um parametro foi enviado para este script
 if [ $# -lt 1 ]; then
-	echo -e "ERRO: Nenhum parametro foi enviado.";
-	echo -e "USAGE: utilizar $0 <arquivo_de_inventario.txt>";
+	echo "ERRO: Nenhum parametro foi enviado.";
+	echo "USAGE: utilizar $0 <arquivo_de_inventario.txt>";
 	exit 1;
 elif [[ ! -e ${1} ]]; then
-	echo -e "ERRO: o arquivo enviado nao existe.";
-	echo -e "USAGE: utilizar $0 <arquivo_de_inventario.txt>";
+	echo "ERRO: o arquivo enviado nao existe.";
+	echo "USAGE: utilizar $0 <arquivo_de_inventario.txt>";
 	exit 1;
 elif [[ ! -s ${1} ]]; then
-	echo -e "ERRO: o arquivo enviado esta vazio.";
-	echo -e "USAGE: utilizar $0 <arquivo_de_inventario.txt>";
+	echo "ERRO: o arquivo enviado esta vazio.";
+	echo "USAGE: utilizar $0 <arquivo_de_inventario.txt>";
 	exit 1;
 fi
 
@@ -327,29 +285,11 @@ fi
 cat ${1} |iconv -t UTF-8//TRANSLIT |sed 's/\\r//g' |sed "y/àáâãéêíóôõúç/aaaaeeiooouc/" |sed '/^#/d' |sed '/^$/d' |sed '/^\ $/d'  > ${DADOS}
 
 # definição de cores
-RED='\e[31;1m'
-GREEN='\e[32;1m'
-YELLOW='\e[33;1m'
-BLUE='\e[36;1m'
-NORMAL='\e[m'
-
-# definição de icones
-if [ "${SO}" = "Darwin" ]; then
-	OKICON="✅";
-	WARNICON="🔶";
-	NOKICON="🚫";
-	UPDATEICON="🔄";
-elif [[ "${SO}" = "CYGWIN" ]]; then
-	OKICON="✅";
-	WARNICON="🔶";
-	NOKICON="⛔";
-	UPDATEICON="🔄";
-else
-	OKICON="";
-	WARNICON="";
-	NOKICON="";
-	UPDATEICON="";
-fi
+RED="\\e[31;1m"
+GREEN="\\e[32;1m"
+YELLOW="\\e[33;1m"
+BLUE="\\e[36;1m"
+NORMAL="\\e[m"
 
 # definicao de tamanho da tela para escrever sempre no fim
 LINES=`tput lines`
@@ -374,22 +314,15 @@ COLSIZE=$((ICON+DESCSIZE+IPSIZE+RESULTSIZE+PORTSIZE+RAIZSIZE+21))
 # verifica quantas linhas possui o inventario para repeticao
 FSIZE=`awk 'END{print NR}' ${DADOS}`
 
-#verifica se está com a última versão do script e atualiza quando necessário
 check_update
-
-#verifica se o computador possui todos os comandos necessários para execução
-check_commands
-
 # escreve cabeçalho da execução dentro do arquivo temporario
 cria_cabecalho
 
 # executa os testes ip por ip e salva o resultado num arquivo temporario.
-(ciclo_de_testes) &
+ciclo_de_testes
 
 # enquanto estiver executando o teste, a animação verifica se terminou.
-animacao "nc" "Executando testes"
-
-
+animacao
 
 # limpar a linha da animação e do contador
 tput cup $((LINES-2)) 0
